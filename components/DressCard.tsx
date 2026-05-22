@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import type { Dress } from '@/lib/types';
@@ -26,12 +25,11 @@ export default function DressCard({ dress, index = 0 }: Props) {
       <Link href={`/haljina/${dress.id}`} className="block">
         {/* Image container */}
         <div className="relative aspect-[3/4] overflow-hidden bg-cream-dark">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={dress.cover_image}
             alt={dress.name}
-            fill
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
           />
 
           {/* Bottom gradient reveal */}
@@ -50,6 +48,12 @@ export default function DressCard({ dress, index = 0 }: Props) {
         <div className="pt-4 pb-2 px-1">
           <h3 className="font-serif text-xl text-brown font-light tracking-wide">{dress.name}</h3>
           <p className="font-sans text-[10px] text-muted tracking-[0.2em] uppercase mt-1">{label}</p>
+          {dress.price_range && (
+            <p className="font-sans text-[15px] text-gold font-medium mt-2">{dress.price_range}</p>
+          )}
+          <p className={`font-sans text-[12px] tracking-[0.1em] font-medium mt-1.5 ${dress.available ? 'text-green-700' : 'text-red-500'}`}>
+            {dress.available ? '● Dostupna' : '● Nedostupna'}
+          </p>
           <div className="flex items-center gap-2 mt-3 text-gold group-hover:text-gold-dark transition-colors duration-300">
             <span className="font-sans text-[10px] tracking-[0.18em] uppercase">Pogledaj detalje</span>
             <ArrowRight size={13} />

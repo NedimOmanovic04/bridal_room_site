@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getAllDresses } from "@/lib/supabase";
+import { getAllDresses, getCategories } from "@/lib/supabase";
 import DressGrid from "@/components/DressGrid";
 
 export const metadata: Metadata = {
@@ -9,12 +9,11 @@ export const metadata: Metadata = {
 };
 
 export default async function KolekcijaPage() {
-  const dresses = await getAllDresses();
+  const [dresses, categories] = await Promise.all([getAllDresses(), getCategories()]);
 
   return (
     <main className="min-h-screen bg-cream pt-32 pb-28">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        {/* Page header */}
         <div className="text-center mb-18">
           <p className="font-sans text-[10px] tracking-[0.42em] text-gold uppercase mb-5">
             The Bridal Room
@@ -28,7 +27,7 @@ export default async function KolekcijaPage() {
           </p>
         </div>
 
-        <DressGrid dresses={dresses} showFilter />
+        <DressGrid dresses={dresses} categories={categories} showFilter />
       </div>
     </main>
   );

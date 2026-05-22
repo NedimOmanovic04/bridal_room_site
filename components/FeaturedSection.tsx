@@ -21,7 +21,7 @@ export default function FeaturedSection({ dresses }: { dresses: Dress[] }) {
             Naša selekcija
           </p>
           <h2 className="font-serif text-4xl sm:text-5xl text-brown font-light italic">
-            Naše Favoriti
+            Naši Favoriti
           </h2>
           <div className="w-16 h-px bg-gold mx-auto mt-7" />
         </motion.div>

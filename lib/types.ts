@@ -1,8 +1,15 @@
+export interface Category {
+  id: number;
+  value: string;
+  label: string;
+  sort_order: number;
+}
+
 export interface Dress {
   id: string;
   name: string;
   description: string | null;
-  category: 'ball_gown' | 'a_line' | 'mermaid' | 'princess' | 'bohemian' | 'minimalist';
+  category: string;
   price_range: string | null;
   featured: boolean;
   available: boolean;

@@ -9,7 +9,7 @@ interface Props {
 
 export async function generateStaticParams() {
   const dresses = await getAllDresses();
-  return dresses.map(d => ({ id: d.id }));
+  return dresses.map(d => ({ id: String(d.id) }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

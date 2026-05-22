@@ -1,6 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Dress } from './types';
+import type { Dress, Category } from './types';
 import { PLACEHOLDER_DRESSES } from './constants';
+
+const FALLBACK_CATEGORIES: Category[] = [
+  { id: 1, value: 'ball_gown',  label: 'Ball Gown',  sort_order: 1 },
+  { id: 2, value: 'a_line',     label: 'A-Linija',   sort_order: 2 },
+  { id: 3, value: 'mermaid',    label: 'Sirena',      sort_order: 3 },
+  { id: 4, value: 'princess',   label: 'Princeza',   sort_order: 4 },
+  { id: 5, value: 'bohemian',   label: 'Boho',        sort_order: 5 },
+  { id: 6, value: 'minimalist', label: 'Minimalist',  sort_order: 6 },
+];
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -14,11 +23,11 @@ export async function getFeaturedDresses(): Promise<Dress[]> {
   const { data } = await supabase
     .from('dresses')
     .select('*')
-    .eq('featured', true)
     .eq('available', true)
-    .order('sort_order');
+    .order('sort_order')
+    .limit(9);
 
-  return (data as Dress[]) ?? (PLACEHOLDER_DRESSES.filter(d => d.featured) as Dress[]);
+  return (data as Dress[]) ?? (PLACEHOLDER_DRESSES as Dress[]);
 }
 
 export async function getAllDresses(category?: string): Promise<Dress[]> {
@@ -55,6 +64,12 @@ export async function getDressById(id: string): Promise<Dress | null> {
     .single();
 
   return data as Dress | null;
+}
+
+export async function getCategories(): Promise<Category[]> {
+  if (!supabase) return FALLBACK_CATEGORIES;
+  const { data } = await supabase.from('categories').select('*').order('sort_order');
+  return (data as Category[])?.length ? (data as Category[]) : FALLBACK_CATEGORIES;
 }
 
 export async function submitInquiry(payload: {
