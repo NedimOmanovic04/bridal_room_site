@@ -439,7 +439,7 @@ function DressFormPanel({ form, setForm, categories, onSave, onCancel, uploading
   categories: Category[];
   onSave: () => void; onCancel: () => void;
   uploading: boolean; onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  fileRef: React.RefObject<HTMLInputElement>; title: string;
+  fileRef: React.RefObject<HTMLInputElement | null>; title: string;
 }) {
   return (
     <div className="bg-white border border-gold p-6 mb-4">
