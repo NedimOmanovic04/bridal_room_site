@@ -49,7 +49,9 @@ export default function DressCard({ dress, index = 0 }: Props) {
           <h3 className="font-serif text-xl text-brown font-light tracking-wide">{dress.name}</h3>
           <p className="font-sans text-[10px] text-muted tracking-[0.2em] uppercase mt-1">{label}</p>
           {dress.price_range && (
-            <p className="font-sans text-[15px] text-gold font-medium mt-2">{dress.price_range}</p>
+            <p className="font-sans text-[15px] text-gold font-medium mt-2">
+              {/km/i.test(dress.price_range) ? dress.price_range : `${dress.price_range} KM`}
+            </p>
           )}
           <p className={`font-sans text-[12px] tracking-[0.1em] font-medium mt-1.5 ${dress.available ? 'text-green-700' : 'text-red-500'}`}>
             {dress.available ? '● Dostupna' : '● Nedostupna'}

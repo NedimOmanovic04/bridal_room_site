@@ -4,20 +4,33 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Phone, MessageCircle, Music } from 'lucide-react';
 import { CONTACT } from '@/lib/constants';
-import { submitInquiry } from '@/lib/supabase';
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 export default function ContactSection() {
-  const [form, setForm]     = useState({ name: '', phone: '', message: '' });
+  const [form, setForm]     = useState({ name: '', email: '', message: '' });
   const [status, setStatus] = useState<Status>('idle');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
-    const result = await submitInquiry(form);
-    setStatus(result.ok ? 'success' : 'error');
-    if (result.ok) setForm({ name: '', phone: '', message: '' });
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setStatus('success');
+        setForm({ name: '', email: '', message: '' });
+      } else {
+        setStatus('error');
+      }
+    } catch {
+      setStatus('error');
+    }
   };
 
   const inputClass =
@@ -74,46 +87,52 @@ export default function ContactSection() {
           </div>
 
           <div>
-            <label className={labelClass}>Broj telefona</label>
+            <label className={labelClass}>
+              Email adresa <span className="text-gold">*</span>
+            </label>
             <input
-              type="tel"
-              value={form.phone}
-              onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
+              type="email"
+              required
+              value={form.email}
+              onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
               className={inputClass}
-              placeholder="+387 XX XXX XXX"
-              autoComplete="tel"
+              placeholder="vasa@email.com"
+              autoComplete="email"
             />
           </div>
 
           <div>
-            <label className={labelClass}>Poruka (opcionalno)</label>
+            <label className={labelClass}>
+              Poruka <span className="text-gold">*</span>
+            </label>
             <textarea
+              required
               value={form.message}
               onChange={e => setForm(p => ({ ...p, message: e.target.value }))}
               rows={4}
               className={`${inputClass} resize-none`}
-              placeholder="Vaša poruka ili pitanje..."
+              placeholder="Opišite šta tražite, datum vjenčanja, veličinu..."
             />
           </div>
 
           <div className="pt-2">
             <button
               type="submit"
-              disabled={status === 'loading'}
+              disabled={status === 'loading' || status === 'success'}
               className="w-full btn-shimmer font-sans text-[10px] tracking-[0.28em] uppercase py-4 text-white disabled:opacity-60 transition-opacity"
             >
-              {status === 'loading' ? 'Slanje...' : 'Pošalji Upit'}
+              {status === 'loading' ? 'Slanje...' : status === 'success' ? '✓ Poslano' : 'Pošalji Upit'}
             </button>
           </div>
 
           {status === 'success' && (
             <p className="text-center font-sans text-sm text-green-700">
-              ✓ Upit poslan! Javit ćemo vam se uskoro.
+              Hvala! Vaša poruka je uspješno poslana. Odgovorit ćemo na vaš email uskoro.
             </p>
           )}
           {status === 'error' && (
             <p className="text-center font-sans text-sm text-red-600">
-              Greška pri slanju. Kontaktirajte nas direktno.
+              Greška pri slanju. Kontaktirajte nas direktno putem telefona ili TikToka.
             </p>
           )}
         </motion.form>
@@ -130,24 +149,9 @@ export default function ContactSection() {
         {/* Direct contact */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
-            {
-              href: CONTACT.whatsapp,
-              icon: <MessageCircle size={17} className="text-gold" />,
-              label: 'WhatsApp / Viber',
-              external: true,
-            },
-            {
-              href: `tel:${CONTACT.phoneRaw}`,
-              icon: <Phone size={17} className="text-gold" />,
-              label: 'Pozovi',
-              external: false,
-            },
-            {
-              href: CONTACT.tiktok,
-              icon: <Music size={17} className="text-gold" />,
-              label: 'TikTok DM',
-              external: true,
-            },
+            { href: CONTACT.whatsapp, icon: <MessageCircle size={17} className="text-gold" />, label: 'WhatsApp / Viber', external: true },
+            { href: `tel:${CONTACT.phoneRaw}`, icon: <Phone size={17} className="text-gold" />, label: 'Pozovi', external: false },
+            { href: CONTACT.tiktok, icon: <Music size={17} className="text-gold" />, label: 'TikTok DM', external: true },
           ].map(item => (
             <a
               key={item.label}
