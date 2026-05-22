@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, getCategories as fetchCatsFromDb } from '@/lib/supabase';
 import type { Dress, Category } from '@/lib/types';
 import { LogOut, Plus, Pencil, Trash2, Check, X, Upload } from 'lucide-react';
 
@@ -109,10 +109,14 @@ export default function AdminClient() {
 
   async function saveDress() {
     if (!supabase) return;
+    const raw = dressForm.price_range.trim();
+    const price_range = raw
+      ? /km/i.test(raw) ? raw : `${raw} KM`
+      : null;
     const payload = {
       ...dressForm,
       description: dressForm.description || null,
-      price_range: dressForm.price_range || null,
+      price_range,
     };
     if (editingId) {
       await supabase.from('dresses').update(payload).eq('id', editingId);
@@ -156,10 +160,9 @@ export default function AdminClient() {
   // ── Categories ───────────────────────────────────────────────────────────────
 
   async function fetchCategories() {
-    if (!supabase) return;
     setLoadingC(true);
-    const { data } = await supabase.from('categories').select('*').order('sort_order');
-    if (data) setCategories(data as Category[]);
+    const data = await fetchCatsFromDb();
+    setCategories(data);
     setLoadingC(false);
   }
 
@@ -170,16 +173,26 @@ export default function AdminClient() {
   }
 
   async function saveCat() {
-    if (!supabase) return;
+    if (!supabase) { alert('Supabase nije konfigurisan.'); return; }
+    if (!catForm.label.trim()) { alert('Unesi naziv kategorije.'); return; }
     const payload = {
-      value:      catForm.value || slugify(catForm.label),
-      label:      catForm.label,
+      value:      slugify(catForm.label),
+      label:      catForm.label.trim(),
       sort_order: catForm.sort_order,
     };
+    let error;
     if (editingCatId !== null) {
-      await supabase.from('categories').update(payload).eq('id', editingCatId);
+      ({ error } = await supabase.from('categories').update(payload).eq('id', editingCatId));
     } else {
-      await supabase.from('categories').insert(payload);
+      ({ error } = await supabase.from('categories').insert(payload));
+    }
+    if (error) {
+      if (error.code === '42P01') {
+        alert('Tabela "categories" ne postoji. Pokreni SQL iz uputstava da je kreiraš.');
+      } else {
+        alert(`Greška: ${error.message}`);
+      }
+      return;
     }
     await fetchCategories();
     setEditingCatId(null);
@@ -353,7 +366,7 @@ export default function AdminClient() {
                         <div className="flex-1">
                           <span className="font-serif text-lg text-brown">{cat.label}</span>
                           <span className="font-sans text-[10px] text-muted tracking-[0.15em] ml-3">
-                            value: {cat.value} · redosljed: {cat.sort_order}
+                            redosljed: {cat.sort_order}
                           </span>
                         </div>
                         <button onClick={() => startEditCat(cat)}
@@ -371,9 +384,8 @@ export default function AdminClient() {
               </div>
             )}
 
-            <p className="font-sans text-[11px] text-muted mt-6 leading-relaxed">
-              * <strong>value</strong> je interna oznaka kategorije (npr. <em>ball_gown</em>). Automatski se generira iz naziva.
-              Ako postavljaš categoriju za haljine ručno u bazi, koristi taj <em>value</em>.
+            <p className="font-sans text-[11px] text-muted mt-6">
+              * Redosljed određuje kojim redoslijedom se kategorije prikazuju u filteru.
             </p>
           </>
         )}
@@ -452,8 +464,8 @@ function DressFormPanel({ form, setForm, categories, onSave, onCancel, uploading
         </Field>
 
         <Field label="Redosljed">
-          <input type="number" value={form.sort_order}
-            onChange={e => setForm(f => ({ ...f, sort_order: Number(e.target.value) }))}
+          <input type="number" min={0} value={form.sort_order}
+            onChange={e => setForm(f => ({ ...f, sort_order: Math.max(0, Number(e.target.value)) }))}
             className={input} />
         </Field>
 
@@ -506,18 +518,14 @@ function CatFormPanel({ form, setForm, onSave, onCancel, title }: {
   return (
     <div className="bg-white border border-gold p-6 mb-4">
       <h3 className="font-serif text-xl text-brown font-light mb-6">{title}</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <Field label="Naziv kategorije *">
           <input value={form.label} onChange={e => setCatLabel(e, form, setForm)}
             className={input} />
         </Field>
-        <Field label="Value (auto)">
-          <input value={form.value || slugify(form.label)} readOnly
-            className={`${input} bg-cream-dark text-muted cursor-default`} />
-        </Field>
         <Field label="Redosljed">
-          <input type="number" value={form.sort_order}
-            onChange={e => setForm(f => ({ ...f, sort_order: Number(e.target.value) }))}
+          <input type="number" min={0} value={form.sort_order}
+            onChange={e => setForm(f => ({ ...f, sort_order: Math.max(0, Number(e.target.value)) }))}
             className={input} />
         </Field>
       </div>

@@ -13,11 +13,11 @@ function parseMinPrice(priceRange: string | null): number {
 }
 
 const PRICE_RANGES = [
-  { value: 'all',       label: 'Sve cijene' },
-  { value: 'under500',  label: 'Do 500 KM' },
-  { value: '500to1000', label: '500 – 1.000 KM' },
-  { value: '1000to2000',label: '1.000 – 2.000 KM' },
-  { value: 'over2000',  label: '2.000+ KM' },
+  { value: 'all',        label: 'Sve cijene' },
+  { value: 'under500',   label: 'Do 500 KM' },
+  { value: '500to1000',  label: '500 – 1.000 KM' },
+  { value: '1000to2000', label: '1.000 – 2.000 KM' },
+  { value: 'over2000',   label: '2.000+ KM' },
 ];
 
 const AVAILABILITY_OPTIONS = [
@@ -52,13 +52,11 @@ export default function DressGrid({ dresses, categories, showFilter = true }: Pr
     if (category !== 'all') {
       result = result.filter(d => d.category === category);
     }
-
     if (availability === 'available') {
       result = result.filter(d => d.available);
     } else if (availability === 'unavailable') {
       result = result.filter(d => !d.available);
     }
-
     if (priceRange !== 'all') {
       result = result.filter(d => {
         const min = parseMinPrice(d.price_range);
@@ -72,7 +70,6 @@ export default function DressGrid({ dresses, categories, showFilter = true }: Pr
         }
       });
     }
-
     if (sortBy === 'name_asc') {
       result.sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortBy === 'price_asc') {
@@ -100,9 +97,9 @@ export default function DressGrid({ dresses, categories, showFilter = true }: Pr
     sortBy !== 'default',
   ].filter(Boolean).length;
 
-  const allCats: Category[] = [
-    { id: 0, value: 'all', label: 'Sve', sort_order: 0 },
-    ...categories,
+  const catOptions = [
+    { value: 'all', label: 'Sve' },
+    ...categories.map(c => ({ value: c.value, label: c.label })),
   ];
 
   return (
@@ -126,28 +123,15 @@ export default function DressGrid({ dresses, categories, showFilter = true }: Pr
             <span className="font-sans text-[11px] text-muted">{filtered.length} haljina</span>
           </div>
 
-          {/* Filter panel — always visible on desktop, toggle on mobile */}
+          {/* Filter panel */}
           <div className={filtersOpen ? 'block' : 'hidden md:block'}>
-
-            {/* Category pills */}
-            <div className="flex flex-wrap gap-2 justify-center mb-7">
-              {allCats.map(cat => (
-                <button
-                  key={cat.value}
-                  onClick={() => setCategory(cat.value)}
-                  className={`font-sans text-[10px] tracking-[0.18em] uppercase px-5 py-2.5 border transition-colors duration-200 ${
-                    category === cat.value
-                      ? 'border-gold bg-gold text-ivory'
-                      : 'border-gold-light text-muted hover:border-gold hover:text-gold'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Second row: dropdowns */}
-            <div className="flex flex-wrap gap-3 items-center justify-center border-t border-gold-light/50 pt-6">
+            <div className="flex flex-wrap gap-6 items-end justify-center">
+              <FilterSelect
+                label="Kategorija"
+                value={category}
+                onChange={setCategory}
+                options={catOptions}
+              />
               <FilterSelect
                 label="Dostupnost"
                 value={availability}
@@ -161,26 +145,24 @@ export default function DressGrid({ dresses, categories, showFilter = true }: Pr
                 options={PRICE_RANGES}
               />
               <FilterSelect
-                label="Sortiraj"
+                label="Sortiranje"
                 value={sortBy}
                 onChange={setSortBy}
                 options={SORT_OPTIONS}
               />
               {activeCount > 0 && (
-                <button
-                  onClick={resetAll}
-                  className="flex items-center gap-1.5 font-sans text-[10px] tracking-[0.15em] uppercase text-muted hover:text-red-500 transition-colors border border-transparent hover:border-red-200 px-4 py-2.5"
-                >
-                  <X size={11} />
-                  Resetuj
-                </button>
+                <div className="flex flex-col justify-end">
+                  <button
+                    onClick={resetAll}
+                    className="flex items-center gap-1.5 font-sans text-[10px] tracking-[0.15em] uppercase text-muted hover:text-red-500 transition-colors border border-transparent hover:border-red-200 px-4 py-2.5"
+                  >
+                    <X size={11} />
+                    Resetuj
+                  </button>
+                </div>
               )}
             </div>
 
-            {/* Result count — desktop */}
-            <p className="hidden md:block text-center font-sans text-[11px] text-muted mt-5">
-              {filtered.length} {filtered.length === 1 ? 'haljina' : 'haljine/haljina'}
-            </p>
           </div>
         </div>
       )}
@@ -217,7 +199,7 @@ export default function DressGrid({ dresses, categories, showFilter = true }: Pr
   );
 }
 
-function FilterSelect({ value, onChange, options }: {
+function FilterSelect({ label, value, onChange, options }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
@@ -225,24 +207,27 @@ function FilterSelect({ value, onChange, options }: {
 }) {
   const isActive = value !== options[0].value;
   return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        className={`appearance-none font-sans text-[11px] tracking-[0.15em] uppercase border px-5 py-2.5 pr-9 bg-white focus:outline-none cursor-pointer transition-colors ${
-          isActive
-            ? 'border-gold text-gold'
-            : 'border-gold-light text-muted hover:border-gold hover:text-gold'
-        }`}
-      >
-        {options.map(o => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
-      <ChevronDown
-        size={11}
-        className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${isActive ? 'text-gold' : 'text-muted'}`}
-      />
+    <div className="flex flex-col gap-1.5">
+      <span className="font-sans text-[10px] tracking-[0.2em] text-muted uppercase">{label}</span>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className={`appearance-none font-sans text-[11px] tracking-[0.15em] uppercase border px-5 py-2.5 pr-9 bg-white focus:outline-none cursor-pointer transition-colors ${
+            isActive
+              ? 'border-gold text-gold'
+              : 'border-gold-light text-muted hover:border-gold hover:text-gold'
+          }`}
+        >
+          {options.map(o => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+        <ChevronDown
+          size={11}
+          className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${isActive ? 'text-gold' : 'text-muted'}`}
+        />
+      </div>
     </div>
   );
 }
