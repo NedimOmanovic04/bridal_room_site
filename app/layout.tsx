@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Jost } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import FloatingButton from "@/components/FloatingButton";
+import SiteChrome from "@/components/SiteChrome";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -55,10 +53,7 @@ export default function RootLayout({
       className={`${cormorant.variable} ${jost.variable}`}
     >
       <body className="font-sans">
-        <Navbar />
-        {children}
-        <Footer />
-        <FloatingButton />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );
